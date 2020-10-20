@@ -304,7 +304,7 @@ bool csound_setup(BelaContext* context, void* p) {
     csound = new Csound();
     csData->csound = csound;
     csound->SetHostData((void*)context);
-    csound->SetHostImplementedAudioIO(1, 0);
+    csound->SetHostImplementedAudioIO(1, context->audioFrames);
     /* set up digi opcodes */
     if (csnd::plugin<DigiIn>((csnd::Csound*)csound->GetCsound(), "digiInBela", "k", "i", csnd::thread::ik) != 0)
         printf("Warning: could not add digiInBela k-rate opcode\n");
@@ -341,6 +341,12 @@ bool csound_setup(BelaContext* context, void* p) {
         return false;
     }
     csData->blocksize = csound->GetKsmps();
+    if(context->audioFrames != csData->blocksize && context->audioFrames % csData->blocksize)
+    {
+        fprintf(stderr, "Error: Csound's ksmps (%d) and Bela's periodSize (%u) differ and the latter is not a multiple of the former. This would lead to uneven CPU usage, and result in dropouts while some CPU resources remain unused.\n",
+        csData->blocksize, context->audioFrames);
+        return false;
+    }
     csData->count = 0;
     csData->counti = 0;
     csData->blockframes = 0;
@@ -502,6 +508,7 @@ int main(int argc, const char* argv[]) {
     Bela_InitSettings_free(settings);
     if (res) {
         std::cerr << "error initialising Bela \n";
+        Bela_cleanupAudio();
         return 1;
     }
     if (Bela_startAudio() == 0) {
