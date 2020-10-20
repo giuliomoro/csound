@@ -273,7 +273,7 @@ void trillReadLoop(void*) {
             Trill* t = gTouchSensors[n];
             t->readI2C();
         }
-        usleep(50000);
+        usleep(10000);
     }
 }
 
@@ -346,7 +346,8 @@ bool csound_setup(BelaContext* context, void* p) {
             gTouchSensors.back()->printDetails();
         }
     }
-    Bela_runAuxiliaryTask(trillReadLoop);
+    if(gTouchSensors.size())
+        Bela_runAuxiliaryTask(trillReadLoop);
 
     /* compile CSD */
     if ((csData->res = csound->Compile(numArgs, args)) != 0) {
