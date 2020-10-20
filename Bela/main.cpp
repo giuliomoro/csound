@@ -23,7 +23,6 @@
 
 #include <getopt.h>
 #include <Bela.h>
-#include <libraries/Midi/Midi.h>
 #include <libraries/Scope/Scope.h>
 #include <libraries/Trill/Trill.h>
 #include <csound/csound.hpp>
@@ -33,15 +32,6 @@
 #include <iostream>
 #include <atomic>
 
-
-static int OpenMidiInDevice(CSOUND *csound, void **userData, const char *dev);
-static int CloseMidiInDevice(CSOUND *csound, void *userData);
-static int ReadMidiData(CSOUND *csound, void *userData, unsigned char *mbuf,
-      int nbytes);
-static int OpenMidiOutDevice(CSOUND *csound, void **userData, const char *dev);
-static int CloseMidiOutDevice(CSOUND *csound, void *userData);
-static int WriteMidiData(CSOUND *csound, void *userData, const unsigned char *mbuf,
-       int nbytes);
 
 std::vector<Trill*> gTouchSensors;
 
@@ -305,13 +295,6 @@ bool csound_setup(BelaContext *context, void *p)
   csData->csound = csound;
   csound->SetHostData((void *) context);
   csound->SetHostImplementedAudioIO(1,0);
-  csound->SetHostImplementedMIDIIO(1);
-  csound->SetExternalMidiInOpenCallback(OpenMidiInDevice);
-  csound->SetExternalMidiReadCallback(ReadMidiData);
-  csound->SetExternalMidiInCloseCallback(CloseMidiInDevice);
-  csound->SetExternalMidiOutOpenCallback(OpenMidiOutDevice);
-  csound->SetExternalMidiWriteCallback(WriteMidiData);
-  csound->SetExternalMidiOutCloseCallback(CloseMidiOutDevice);
   /* set up digi opcodes */
   if(csnd::plugin<DigiIn>((csnd::Csound *) csound->GetCsound(), "digiInBela",
         "k","i", csnd::thread::ik) != 0)
@@ -468,63 +451,6 @@ void csound_cleanup(BelaContext *context, void *p)
   delete csData->csound;
   for(auto t : gTouchSensors)
     delete t;
-}
-
-static Midi gMidi;
-/** MIDI functions 
- */
-int OpenMidiInDevice(CSOUND *csound, void **userData, const char *dev) {
-  Midi *midi = &gMidi;
-  if(midi->readFrom(dev) == 1) {
-    midi->enableParser(false);
-    *userData = (void *) midi;
-    return 0;
-  }
-  csoundMessage(csound, "Could not open Midi in device %s", dev);
-  return -1;
-}
-
-int CloseMidiInDevice(CSOUND *csound, void *userData) {
-  return 0;
-}
- 
-int ReadMidiData(CSOUND *csound, void *userData,
-     unsigned char *mbuf, int nbytes) {
-  int n = 0, byte;
-  if(userData) {
-    Midi *midi = (Midi *) userData;
-    while((byte = midi->getInput()) >= 0) {
-      *mbuf++ = (unsigned char) byte;
-      if(++n == nbytes) break;
-    }
-    return n;
-  }
-  return 0;
-}
-
-int OpenMidiOutDevice(CSOUND *csound, void **userData, const char *dev) {
-  Midi *midi = &gMidi;
-  if(midi->writeTo(dev) == 1) {
-    midi->enableParser(false);
-    *userData = (void *) midi;
-    return 0;
-  }
-  csoundMessage(csound, "Could not open Midi out device %s", dev);
-  return -1;
-}
-
-int CloseMidiOutDevice(CSOUND *csound, void *userData) {
-  return 0;
-}
-
-int WriteMidiData(CSOUND *csound, void *userData,
-      const unsigned char *mbuf, int nbytes) {
-  if(userData) {
-    Midi *midi = (Midi *) userData;
-    if(midi->writeOutput((midi_byte_t *)mbuf, nbytes) > 0) return nbytes;
-    return 0;
-  }
-  return 0;
 }
 
 void usage(const char *prg) {
