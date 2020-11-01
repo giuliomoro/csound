@@ -484,8 +484,8 @@ void csound_render(BelaContext* context, void* p) {
         // processing has ended, so let's silence the outputs until main()
         // realises that and tells us to stop
         memset(context->audioOut, 0, sizeof(context->audioOut[0]) * context->audioOutChannels * context->audioFrames);
-        memset(context->analogOut, 0, sizeof(context->analogOut[0]) * context->analogOutChannels * context->audioFrames);
-        memset(context->digital, 0, sizeof(context->digital[0]) * context->digitalChannels);
+        memset(context->analogOut, 0, sizeof(context->analogOut[0]) * context->analogOutChannels * context->analogFrames);
+        memset(context->digital, 0, sizeof(context->digital[0]) * context->digitalFrames);
     }
 }
 
