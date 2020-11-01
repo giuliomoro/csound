@@ -336,7 +336,7 @@ bool csound_setup(BelaContext* context, void* p) {
     csound = new Csound();
     csData->csound = csound;
     csound->SetHostData((void*)context);
-    csound->SetHostImplementedAudioIO(1, context->audioFrames);
+    csound->SetHostImplementedAudioIO(1, 0);
     csound->SetHostImplementedMIDIIO(1);
     csound->SetExternalMidiInOpenCallback(OpenMidiInDevice);
     csound->SetExternalMidiReadCallback(ReadMidiData);
