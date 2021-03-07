@@ -1832,6 +1832,9 @@ typedef struct _message_queue_t_ {
     int  mode;
     char *opcodedir;
     char *score_srt;
+#ifndef WIN32
+    int plain_text_output;
+#endif // !WIN32
     /*struct CSOUND_ **self;*/
     /**@}*/
 #endif  /* __BUILDING_LIBCSOUND */
